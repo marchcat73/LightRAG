@@ -49,7 +49,7 @@ class LightRAGHTTPServer:
         num_ctx = int(os.getenv("OLLAMA_NUM_CTX", "8192"))
         timeout = int(os.getenv("LLM_TIMEOUT", "600"))
         embedding_dim = int(os.getenv("EMBEDDING_DIM", "1024"))
-        llm_model = os.getenv("LLM_MODEL", "qwen3-14b:latest")
+        llm_model = os.getenv("LLM_MODEL", "qwen3-coder:latest")
         reranker_model = os.getenv("RERANKER_MODEL", "dengcao/Qwen3-Reranker-4B:Q5_K_M")
 
         print(f"Initializing LightRAG: ctx={num_ctx}, timeout={timeout}s, embed_dim={embedding_dim}",
@@ -162,7 +162,9 @@ class LightRAGHTTPServer:
             "   - weight: число от 0.0 до 1.0, оценка силы связи (если неуверен, поставь 0.5).\n"
             "   - description: краткое описание связи (1-2 предложения).\n"
             "   НЕ ДОБАВЛЯЙ других полей в объект отношения!\n"
-            "5. Если сущностей нет — верни {\"entities\": [], \"relationships\": []}.\n\n"
+            "5. ЗАПРЕЩЕНО добавлять любые другие поля в объекты 'entities' или 'relationships'.\n"
+            "6. ЗАПРЕЩЕНО опускать обязательные поля.\n"
+            "7. Если сущностей нет — верни {\"entities\": [], \"relationships\": []}.\n\n"
             "Формат ответа:\n"
             "{\"entities\": [{\"name\": \"Имя\", \"type\": \"Тип\"}], \"relationships\": [{\"source\": \"Имя1\", \"target\": \"Имя2\", \"relation\": \"связь\", \"weight\": 0.8, \"description\": \"Описание связи\"}]}"
         )
@@ -198,15 +200,15 @@ class LightRAGHTTPServer:
                     "temperature": 0.1,  # Для стабильности JSON
                     "top_p": 0.95,
                     "top_k": 20,
-                    "num_predict": 4096,  # Может быть нужно увеличить, если статья должна быть длиннее
+                    "num_predict": 1024,  # Может быть нужно увеличить, если статья должна быть длиннее
                     "num_think": 0,
                     "stop": ["</answer>", "<|endoftext|>", "<|end|>", "<|im_end|>"]
                 },
                 "timeout": timeout
             },
-            llm_model_max_async=2,
+            llm_model_max_async=1,
             embedding_func=embedding_func,
-            embedding_func_max_async=4,
+            embedding_func_max_async=2,
             chunk_token_size=1000,
             chunk_overlap_token_size=80,
             entity_extract_max_gleaning=1,
