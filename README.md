@@ -1,3 +1,126 @@
+```sh
+source .venv/bin/activate
+python mcp_lightrag_server.py 2> lightrag.log
+python rag_scraper_http.py
+# Monitoring NVIDIA
+watch -n 1 nvidia-smi
+# В отдельном терминале следите за логами
+tail -f lightrag.log | grep -E "Extracting|Chunk|delimiter|pipeline|persist"
+# если зависает
+echo '{"method": "insert", "params": {"text": "Test"}}' | python mcp_lightrag_server.py
+
+
+# 2. Удалить том с данными
+podman volume rm neo4j_neo4j_data
+
+# 3. Проверить, что том исчез
+podman volume ls
+```
+
+```sh
+echo '{"method": "insert", "params": {"text": "LightRAG это библиотека для графовых RAG систем"}}' | python mcp_lightrag_server.py
+
+echo '{"method": "query", "params": {"query": "Что такое LightRAG?"}}' | python mcp_lightrag_server.py
+```
+
+```sh
+curl -X POST http://localhost:8000/api/query/stream \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "Сухое (Абсолютное) лечебное голодание",
+    "mode": "hybrid"
+  }'
+```
+
+```sh
+ollama create qwen3-coder-next -f ./Modelfile.qwen3-coder-next
+ollama run qwen3-coder-next
+
+ollama create qwen3-14b -f ./Modelfile.qwen3-14b
+ollama run qwen3-14b
+
+ollama create qwen3-coder -f ./Modelfile.qwen3-coder-scraping
+ollama run qwen3-coder
+
+ollama create gemma4-e4b -f ./Modelfile.gemma4-e4b
+
+code ~/.openclaw/openclaw.json
+
+```
+
+## OpenClaw
+
+cat ~/.openclaw/.env | grep OPENCLAW_GATEWAY_TOKEN
+OPENCLAW_GATEWAY_TOKEN=e81e41eb876f5be1fd94d1f5314f8b53bee6962fafba5cfa3f77f20ed4d7c169
+openclaw tui --token e81e41eb876f5be1fd94d1f5314f8b53bee6962fafba5cfa3f77f20ed4d7c169
+
+grep OPENCLAW_GATEWAY_TOKEN ~/.openclaw/.env | cut -d '=' -f2
+
+openclaw tui --url ws://127.0.0.1:18789 --token e81e41eb876f5be1fd94d1f5314f8b53bee6962fafba5cfa3f77f20ed4d7c169
+openclaw devices approve 411b08c1-4701-4db5-a4e1-d7852c819ae6
+
+```bash
+curl -s http://localhost:11434/api/chat -d '{
+  "model": "qwen3-14B-claude",
+  "messages": [{"role": "user", "content": "What is the weather?"}],
+  "tools": [{"type": "function", "function": {"name": "test", "parameters": {"type": "object", "properties": {}}}}],
+  "stream": false
+}' | grep -i "error\|tools"
+```
+
+```sh
+curl http://localhost:11434/api/generate \
+  -d '{
+    "model": "qwen-coder:latest",
+    "prompt": "Представь, что у меня есть файл длиной 30000 токенов...",
+    "stream": false,
+    "options": { "num_ctx": 32768 }
+  }' | jq '.response'
+
+# 3. Проверь, что tools работают:
+curl http://localhost:11434/api/chat \
+  -d '{
+    "model": "qwen3-14b:latest",
+    "messages": [{"role": "user", "content": "Сколько будет 2+2?"}],
+    "tools": [{
+      "name": "calculator",
+      "description": "Калькулятор",
+      "parameters": {}
+    }]
+  }' | jq '.message.tool_calls'
+```
+
+```sh
+curl http://localhost:11434/api/chat \
+  -d '{
+    "model": "qwen3-14b:latest",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Ты — ассистент с инструментами. Если пользователь просит что-то, что можно сделать через функции — вызывай их."
+      },
+      {
+        "role": "user",
+        "content": "Получи текущий год"
+      }
+    ],
+    "tools": [
+      {
+        "name": "get_current_year",
+        "description": "Возвращает текущий год в формате YYYY",
+        "parameters": {}
+      }
+    ]
+  }'
+
+```
+
+```sh
+podman logs -f openclaw
+podman exec -it openclaw /bin/bash
+
+```
+
 <div align="center">
 
 <div style="margin: 20px 0;">
@@ -73,6 +196,7 @@
 ---
 
 ## 🎉 News
+
 - [2026.03]🎯[New Feature]: Integrated **OpenSearch** as a unified storage backend, providing comprehensive support for all four LightRAG storage.
 - [2026.03]🎯[New Feature]: Introduced a setup wizard. Support for local deployment of embedding, reranking, and storage backends via Docker.
 - [2025.11]🎯[New Feature]: Integrated **RAGAS for Evaluation** and **Langfuse for Tracing**. Updated the API to return retrieved contexts alongside query results to support context precision metrics.
@@ -99,9 +223,9 @@
   </summary>
 
 ![LightRAG Indexing Flowchart](https://learnopencv.com/wp-content/uploads/2024/11/LightRAG-VectorDB-Json-KV-Store-Indexing-Flowchart-scaled.jpg)
-*Figure 1: LightRAG Indexing Flowchart - Img Caption : [Source](https://learnopencv.com/lightrag/)*
+_Figure 1: LightRAG Indexing Flowchart - Img Caption : [Source](https://learnopencv.com/lightrag/)_
 ![LightRAG Retrieval and Querying Flowchart](https://learnopencv.com/wp-content/uploads/2024/11/LightRAG-Querying-Flowchart-Dual-Level-Retrieval-Generation-Knowledge-Graphs-scaled.jpg)
-*Figure 2: LightRAG Retrieval and Querying Flowchart - Img Caption : [Source](https://learnopencv.com/lightrag/)*
+_Figure 2: LightRAG Retrieval and Querying Flowchart - Img Caption : [Source](https://learnopencv.com/lightrag/)_
 
 </details>
 
@@ -117,7 +241,7 @@
 
 The LightRAG Server is designed to provide Web UI and API support. The Web UI facilitates document indexing, knowledge graph exploration, and a simple RAG query interface. LightRAG Server also provide an Ollama compatible interfaces, aiming to emulate LightRAG as an Ollama chat model. This allows AI chat bot, such as Open WebUI, to access LightRAG easily.
 
-* Install from PyPI
+- Install from PyPI
 
 ```bash
 ### Install LightRAG Server as tool using uv (recommended)
@@ -142,7 +266,7 @@ cp env.example .env  # Update the .env with your LLM and embedding configuration
 lightrag-server
 ```
 
-* Installation from Source
+- Installation from Source
 
 ```bash
 git clone https://github.com/HKUDS/LightRAG.git
@@ -180,7 +304,7 @@ make env-base  # Or: cp env.example .env and update it manually
 lightrag-server
 ```
 
-* Launching the LightRAG Server with Docker Compose
+- Launching the LightRAG Server with Docker Compose
 
 ```bash
 git clone https://github.com/HKUDS/LightRAG.git
@@ -190,9 +314,7 @@ cp env.example .env  # Update the .env with your LLM and embedding configuration
 docker compose up
 ```
 
-> Historical versions of LightRAG docker images can be found here: [LightRAG Docker Images]( https://github.com/HKUDS/LightRAG/pkgs/container/lightrag)
->
-> Official GHCR images published by GitHub Actions are signed with Sigstore Cosign using GitHub OIDC. See [docs/DockerDeployment.md](./docs/DockerDeployment.md#verify-official-ghcr-images-with-cosign) for verification commands.
+> Historical versions of LightRAG docker images can be found here: [LightRAG Docker Images](https://github.com/HKUDS/LightRAG/pkgs/container/lightrag)
 
 ### Create .env File With Setup Tool
 
@@ -213,9 +335,9 @@ current `.env` for security risks before deployment.
 By default, rerunning the setup preserves unchanged wizard-managed compose service blocks; use a
 `*-rewrite` target only when you need to rebuild those managed blocks from the bundled templates.
 
-### Install  LightRAG Core
+### Install LightRAG Core
 
-* Install from source (Recommended)
+- Install from source (Recommended)
 
 ```bash
 cd LightRAG
@@ -227,7 +349,7 @@ source .venv/bin/activate  # Activate the virtual environment (Linux/macOS)
 # Or: pip install -e .
 ```
 
-* Install from PyPI
+- Install from PyPI
 
 ```bash
 uv pip install lightrag-hku
@@ -259,7 +381,6 @@ LightRAG's demands on the capabilities of Large Language Models (LLMs) are signi
 The LightRAG Server is designed to provide Web UI and API support. The LightRAG Server offers a comprehensive knowledge graph visualization feature. It supports various gravity layouts, node queries, subgraph filtering, and more. For more information about LightRAG Server, please refer to [LightRAG Server](./docs/LightRAG-API-Server.md).
 
 ![iShot_2025-03-23_12.40.08](./README.assets/iShot_2025-03-23_12.40.08.png)
-
 
 ### Quick Start for LightRAG core
 
@@ -304,33 +425,32 @@ LightRAG consistently outperforms NaiveRAG, RQ-RAG, HyDE, and GraphRAG across ag
 
 **Overall Performance Table**
 
-||**Agriculture**||**CS**||**Legal**||**Mix**||
-|----------------------|---------------|------------|------|------------|---------|------------|-------|------------|
-||NaiveRAG|**LightRAG**|NaiveRAG|**LightRAG**|NaiveRAG|**LightRAG**|NaiveRAG|**LightRAG**|
-|**Comprehensiveness**|32.4%|**67.6%**|38.4%|**61.6%**|16.4%|**83.6%**|38.8%|**61.2%**|
-|**Diversity**|23.6%|**76.4%**|38.0%|**62.0%**|13.6%|**86.4%**|32.4%|**67.6%**|
-|**Empowerment**|32.4%|**67.6%**|38.8%|**61.2%**|16.4%|**83.6%**|42.8%|**57.2%**|
-|**Overall**|32.4%|**67.6%**|38.8%|**61.2%**|15.2%|**84.8%**|40.0%|**60.0%**|
-||RQ-RAG|**LightRAG**|RQ-RAG|**LightRAG**|RQ-RAG|**LightRAG**|RQ-RAG|**LightRAG**|
-|**Comprehensiveness**|31.6%|**68.4%**|38.8%|**61.2%**|15.2%|**84.8%**|39.2%|**60.8%**|
-|**Diversity**|29.2%|**70.8%**|39.2%|**60.8%**|11.6%|**88.4%**|30.8%|**69.2%**|
-|**Empowerment**|31.6%|**68.4%**|36.4%|**63.6%**|15.2%|**84.8%**|42.4%|**57.6%**|
-|**Overall**|32.4%|**67.6%**|38.0%|**62.0%**|14.4%|**85.6%**|40.0%|**60.0%**|
-||HyDE|**LightRAG**|HyDE|**LightRAG**|HyDE|**LightRAG**|HyDE|**LightRAG**|
-|**Comprehensiveness**|26.0%|**74.0%**|41.6%|**58.4%**|26.8%|**73.2%**|40.4%|**59.6%**|
-|**Diversity**|24.0%|**76.0%**|38.8%|**61.2%**|20.0%|**80.0%**|32.4%|**67.6%**|
-|**Empowerment**|25.2%|**74.8%**|40.8%|**59.2%**|26.0%|**74.0%**|46.0%|**54.0%**|
-|**Overall**|24.8%|**75.2%**|41.6%|**58.4%**|26.4%|**73.6%**|42.4%|**57.6%**|
-||GraphRAG|**LightRAG**|GraphRAG|**LightRAG**|GraphRAG|**LightRAG**|GraphRAG|**LightRAG**|
-|**Comprehensiveness**|45.6%|**54.4%**|48.4%|**51.6%**|48.4%|**51.6%**|**50.4%**|49.6%|
-|**Diversity**|22.8%|**77.2%**|40.8%|**59.2%**|26.4%|**73.6%**|36.0%|**64.0%**|
-|**Empowerment**|41.2%|**58.8%**|45.2%|**54.8%**|43.6%|**56.4%**|**50.8%**|49.2%|
-|**Overall**|45.2%|**54.8%**|48.0%|**52.0%**|47.2%|**52.8%**|**50.4%**|49.6%|
-
+|                       | **Agriculture** |              | **CS**   |              | **Legal** |              | **Mix**   |              |
+| --------------------- | --------------- | ------------ | -------- | ------------ | --------- | ------------ | --------- | ------------ |
+|                       | NaiveRAG        | **LightRAG** | NaiveRAG | **LightRAG** | NaiveRAG  | **LightRAG** | NaiveRAG  | **LightRAG** |
+| **Comprehensiveness** | 32.4%           | **67.6%**    | 38.4%    | **61.6%**    | 16.4%     | **83.6%**    | 38.8%     | **61.2%**    |
+| **Diversity**         | 23.6%           | **76.4%**    | 38.0%    | **62.0%**    | 13.6%     | **86.4%**    | 32.4%     | **67.6%**    |
+| **Empowerment**       | 32.4%           | **67.6%**    | 38.8%    | **61.2%**    | 16.4%     | **83.6%**    | 42.8%     | **57.2%**    |
+| **Overall**           | 32.4%           | **67.6%**    | 38.8%    | **61.2%**    | 15.2%     | **84.8%**    | 40.0%     | **60.0%**    |
+|                       | RQ-RAG          | **LightRAG** | RQ-RAG   | **LightRAG** | RQ-RAG    | **LightRAG** | RQ-RAG    | **LightRAG** |
+| **Comprehensiveness** | 31.6%           | **68.4%**    | 38.8%    | **61.2%**    | 15.2%     | **84.8%**    | 39.2%     | **60.8%**    |
+| **Diversity**         | 29.2%           | **70.8%**    | 39.2%    | **60.8%**    | 11.6%     | **88.4%**    | 30.8%     | **69.2%**    |
+| **Empowerment**       | 31.6%           | **68.4%**    | 36.4%    | **63.6%**    | 15.2%     | **84.8%**    | 42.4%     | **57.6%**    |
+| **Overall**           | 32.4%           | **67.6%**    | 38.0%    | **62.0%**    | 14.4%     | **85.6%**    | 40.0%     | **60.0%**    |
+|                       | HyDE            | **LightRAG** | HyDE     | **LightRAG** | HyDE      | **LightRAG** | HyDE      | **LightRAG** |
+| **Comprehensiveness** | 26.0%           | **74.0%**    | 41.6%    | **58.4%**    | 26.8%     | **73.2%**    | 40.4%     | **59.6%**    |
+| **Diversity**         | 24.0%           | **76.0%**    | 38.8%    | **61.2%**    | 20.0%     | **80.0%**    | 32.4%     | **67.6%**    |
+| **Empowerment**       | 25.2%           | **74.8%**    | 40.8%    | **59.2%**    | 26.0%     | **74.0%**    | 46.0%     | **54.0%**    |
+| **Overall**           | 24.8%           | **75.2%**    | 41.6%    | **58.4%**    | 26.4%     | **73.6%**    | 42.4%     | **57.6%**    |
+|                       | GraphRAG        | **LightRAG** | GraphRAG | **LightRAG** | GraphRAG  | **LightRAG** | GraphRAG  | **LightRAG** |
+| **Comprehensiveness** | 45.6%           | **54.4%**    | 48.4%    | **51.6%**    | 48.4%     | **51.6%**    | **50.4%** | 49.6%        |
+| **Diversity**         | 22.8%           | **77.2%**    | 40.8%    | **59.2%**    | 26.4%     | **73.6%**    | 36.0%     | **64.0%**    |
+| **Empowerment**       | 41.2%           | **58.8%**    | 45.2%    | **54.8%**    | 43.6%     | **56.4%**    | **50.8%** | 49.2%        |
+| **Overall**           | 45.2%           | **54.8%**    | 48.0%    | **52.0%**    | 47.2%     | **52.8%**    | **50.4%** | 49.6%        |
 
 ## 🔗 Related Projects
 
-*Ecosystem & Extensions*
+_Ecosystem & Extensions_
 
 <div align="center">
   <table>
@@ -390,7 +510,6 @@ LightRAG consistently outperforms NaiveRAG, RQ-RAG, HyDE, and GraphRAG across ag
     <img src="https://contrib.rocks/image?repo=HKUDS/LightRAG" style="border-radius: 15px; box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);" />
   </a>
 </div>
-
 
 ## 📖 Citation
 

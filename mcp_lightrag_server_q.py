@@ -49,7 +49,7 @@ class LightRAGHTTPServer:
         num_ctx = int(os.getenv("OLLAMA_NUM_CTX", "8192"))
         timeout = int(os.getenv("LLM_TIMEOUT", "600"))
         embedding_dim = int(os.getenv("EMBEDDING_DIM", "1024"))
-        llm_model = os.getenv("LLM_MODEL", "qwen3-14b:latest")
+        llm_model = os.getenv("LLM_MODEL", "qwen3-coder:latest")
         reranker_model = os.getenv("RERANKER_MODEL", "dengcao/Qwen3-Reranker-4B:Q5_K_M")
 
         print(f"Initializing LightRAG: ctx={num_ctx}, timeout={timeout}s, embed_dim={embedding_dim}",
@@ -144,27 +144,15 @@ class LightRAGHTTPServer:
 
         # === Системный промпт для экстракции сущностей (JSON) ===
         EXTRACTION_PROMPT = (
-            "Ты — экстрактор сущностей для графа знаний на русском языке.\n"
-            "КРИТИЧЕСКИ ВАЖНО: Сохраняй пробелы между словами в названиях сущностей."
-            "Пиши 'сухое голодание', а не 'сухоеголодание'. "
-            "Пиши 'время года', а не 'времягода'. "
-            "Не используй слитное написание, camelCase, snake_case или нижние подчёркивания. "
-            "Соблюдай естественное русское написание с пробелами. "
+            "Ты — экстрактор сущностей для графа знаний. Твоя задача — извлекать данные строго в формате JSON.\n"
             "ПРАВИЛА:\n"
             "1. Верни ТОЛЬКО валидный JSON. Никакого markdown, никаких пояснений, никаких тегов <think>.\n"
             "2. Не используй блоки кода (```json). Начинай ответ сразу с { и заканчивай }.\n"
             "3. Сущности: сохраняй оригинальное написание (имена, названия), но приводи к начальной форме (именительный падеж), если это возможно.\n"
-            "4. Отношения: ТОЛЬКО следующий формат (все 5 полей обязательны):\n"
-            '   {"source": "string", "target": "string", "relation": "string", "weight": number, "description": "string"}\n'
-            "   - source: имя сущности-источника.\n"
-            "   - target: имя сущности-цели.\n"
-            "   - relation: глагол в настоящем времени (например, 'влияет на', 'является частью', 'имеет').\n"
-            "   - weight: число от 0.0 до 1.0, оценка силы связи (если неуверен, поставь 0.5).\n"
-            "   - description: краткое описание связи (1-2 предложения).\n"
-            "   НЕ ДОБАВЛЯЙ других полей в объект отношения!\n"
+            "4. Отношения: описывай глаголами в настоящем времени (например, 'влияет на', 'является частью').\n"
             "5. Если сущностей нет — верни {\"entities\": [], \"relationships\": []}.\n\n"
             "Формат ответа:\n"
-            "{\"entities\": [{\"name\": \"Имя\", \"type\": \"Тип\"}], \"relationships\": [{\"source\": \"Имя1\", \"target\": \"Имя2\", \"relation\": \"связь\", \"weight\": 0.8, \"description\": \"Описание связи\"}]}"
+            "{\"entities\": [{\"name\": \"Имя\", \"type\": \"Тип\"}], \"relationships\": [{\"source\": \"Имя1\", \"target\": \"Имя2\", \"relation\": \"связь\"}]}"
         )
 
         # === Системный промпт для генерации ответа ===
@@ -192,14 +180,14 @@ class LightRAGHTTPServer:
             llm_model_name=llm_model,
             llm_model_kwargs={
                 "host": ollama_host,
-                "system_prompt": EXTRACTION_PROMPT,  # Для экстракции
+                "system_prompt": GENERATION_PROMPT,  # Для экстракции
                 "options": {
                     "num_ctx": num_ctx,
-                    "temperature": 0.1,  # Для стабильности JSON
+                    "temperature": 0.6,  # Для стабильности JSON
                     "top_p": 0.95,
                     "top_k": 20,
-                    "num_predict": 4096,  # Может быть нужно увеличить, если статья должна быть длиннее
-                    "num_think": 0,
+                    "num_predict": 1024,  # Может быть нужно увеличить, если статья должна быть длиннее
+                    #"num_think": 0,
                     "stop": ["</answer>", "<|endoftext|>", "<|end|>", "<|im_end|>"]
                 },
                 "timeout": timeout
