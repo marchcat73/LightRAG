@@ -1,4 +1,5 @@
 ```sh
+podman logs -f lightrag-neo4j
 source .venv/bin/activate
 python mcp_lightrag_server.py 2> lightrag.log
 python rag_scraper_http.py
