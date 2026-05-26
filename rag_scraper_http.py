@@ -27,7 +27,7 @@ BACKOFF_BASE = 2          # база для экспоненциальной з�
 
 CATEGORIES = [
     f"{BASE_URL}/statji/",
-    # f"{BASE_URL}/statji/vidyi-golodaniya/",
+    f"{BASE_URL}/statji/vidyi-golodaniya/",
     # f"{BASE_URL}/statji/podgotovka-k-golodu/",
     # f"{BASE_URL}/statji/osnonovi/",
     # f"{BASE_URL}/statji/suh-golod-effektivno/",

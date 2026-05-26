@@ -1,7 +1,9 @@
 ```sh
+podman compose up -d
 podman logs -f lightrag-neo4j
 source .venv/bin/activate
 python mcp_lightrag_server.py 2> lightrag.log
+python mcp_lightrag_server_q.py
 python rag_scraper_http.py
 # Monitoring NVIDIA
 watch -n 1 nvidia-smi
@@ -25,10 +27,10 @@ echo '{"method": "query", "params": {"query": "Что такое LightRAG?"}}' |
 ```
 
 ```sh
-curl -X POST http://localhost:8000/api/query/stream \
+curl -X POST http://localhost:8000/api/query \
   -H "Content-Type: application/json" \
   -d '{
-    "query": "Сухое (Абсолютное) лечебное голодание",
+    "query": "Основные лечебные механизмы",
     "mode": "hybrid"
   }'
 ```
