@@ -136,10 +136,20 @@
         "metadata": "Metadata",
         "select": "Select"
       },
+      "filters": {
+        "all": "All",
+        "completed": "Completed",
+        "analyzing": "Analyzing",
+        "processing": "Processing",
+        "pending": "Pending",
+        "failed": "Failed"
+      },
       "status": {
         "all": "All",
         "completed": "Completed",
         "preprocessed": "Preprocessed",
+        "parsing": "Parsing",
+        "analyzing": "Analyzing",
         "processing": "Processing",
         "pending": "Pending",
         "failed": "Failed"
@@ -153,7 +163,16 @@
       "showButton": "Show",
       "hideButton": "Hide",
       "showFileNameTooltip": "Show file name",
-      "hideFileNameTooltip": "Hide file name"
+      "hideFileNameTooltip": "Hide file name",
+      "details": {
+        "title": "Status Details",
+        "openTooltip": "View status details",
+        "content": "Details",
+        "copyButton": "Copy",
+        "copyTooltip": "Copy status details",
+        "copySuccess": "Status details copied",
+        "copyFailed": "Failed to copy status details"
+      }
     },
     "pipelineStatus": {
       "title": "Pipeline Status",
@@ -275,11 +294,12 @@
     "statusCard": {
       "unavailable": "Status information unavailable",
       "serverInfo": "Server Info",
-      "workingDirectory": "Working Directory",
       "inputDirectory": "Input Directory",
-      "maxParallelInsert": "Concurrent Doc Processing",
-      "summarySettings": "Summary Settings",
-      "llmConfig": "LLM Configuration",
+      "parser": "Parser",
+      "mineru": "MinerU",
+      "docling": "Docling",
+      "otherSettings": "Other Settings",
+      "llmConfig": "Model Configuration",
       "llmBinding": "LLM Binding",
       "llmBindingHost": "LLM Endpoint",
       "llmModel": "LLM Model",
@@ -293,15 +313,14 @@
       "graphStorage": "Graph Storage",
       "vectorStorage": "Vector Storage",
       "workspace": "Workspace",
-      "maxGraphNodes": "Max Graph Nodes",
       "rerankerConfig": "Reranker Configuration",
       "rerankerBindingHost": "Reranker Endpoint",
       "rerankerModel": "Reranker Model",
-      "lockStatus": "Lock Status",
-      "threshold": "Threshold"
+      "lockStatus": "Lock Status"
     },
     "propertiesView": {
       "editProperty": "Edit {{property}}",
+      "editLockedByPipeline": "Pipeline is busy; editing disabled",
       "editPropertyDescription": "Edit the property value in the text area below.",
       "errors": {
         "duplicateName": "Node name already exists",
